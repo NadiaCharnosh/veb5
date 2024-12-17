@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href="./style.css" />
+    <title>Document</title>
+    <style>
+        body {
+            padding: 0;
+            margin: 0;
+        }
+
+        p {
+            margin: 0;
+        }
+
+        .text {
+            overflow-y: auto;
+            display: grid;
+            place-items: center;
+            height: 100%;
+        }
+
+        .hover-block,
+        .hover-block-bottom {
+            display: grid;
+            grid-template-columns: auto 1fr;
+            grid-template-rows: 20vh;
+            height: 20vh;
+            background-color: lightblue;
+        }
+
+        .hover-placeholder {
+            height: 20px;
+            width: 50px;
+            margin: 0 20px;
+            align-self: center;
+            background-color: white;
+            border: 1px solid black;
+        }
+
+        .main {
+            height: 60vh;
+            width: 100vw;
+            display: grid;
+            grid-template-columns: repeat(10, 10vw);
+            grid-template-rows: 10vh 50vh;
+        }
+
+        .left {
+            grid-column: span 2;
+            grid-row: span 2;
+            background-color: lightsalmon;
+        }
+
+        .center-up {
+            grid-column: 3 /-1;
+            background-color: lightgreen;
+        }
+
+        .center-main {
+            grid-column: 3 / 9;
+            display: grid;
+            place-content: center;
+        }
+
+        .right {
+            grid-column: 9 / -1;
+            background-color: lightsalmon;
+        }
+
+        .hover-block:hover>.hover-placeholder,
+        .hover-block:hover>p {
+            display: none;
+        }
+
+        .button-container {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .add-btn,
+        .delete-btn {
+            margin: 5px 0;
+            padding: 10px 20px;
+            color: white;
+            border: none;
+            cursor: pointer;
+            text-align: center;
+        }
+
+        .add-btn {
+            background-color: #007bff;
+        }
+
+        .delete-btn {
+            background-color: #dc3545;
+        }
+
+        .dynamic-rows {
+            display: none;
+            margin-top: 20px;
+            width: 80%;
+            text-align: left;
+        }
+
+        .dynamic-row {
+            margin-bottom: 10px;
+        }
+
+        .dynamic-row input {
+            padding: 5px;
+            width: 100%;
+        }
+
+        @media (max-width: 500px) {
+            .main {
+                grid-template-columns: repeat(2, 50%);
+                grid-template-rows: 30% 40% 30%;
+            }
+
+            .center-up {
+                grid-column: 1 / -1;
+            }
+
+            .left {
+                grid-column: 1 / 2;
+            }
+
+            .right {
+                grid-column: 2 / -1;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="hover-block text">
+        <div class="hover-placeholder">Text-x</div>
+        <p>Hover to manage rows!</p>
+        <div class="button-container">
+            <button class="add-btn">Add Row</button>
+            <button class="delete-btn">Delete Last Row</button>
+        </div>
+        <div class="dynamic-rows"></div>
+    </div>
+
+    <div class="main">
+        <div class="left text">
+            <h3>Width</h3>
+            <input class="input-width" type="text" />
+            <h3>Height</h3>
+            <input class="input-height" type="text" />
+            <button class="calculate-btn">Calculate</button>
+            <div class="area-result"></div>
+        </div>
+        <div class="center-up text">
+            Some text content here...
+        </div>
+    </div>
+</body>
+
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const placeholderDiv = document.querySelector('.hover-placeholder');
+        const hoverText = document.querySelector('.hover-block p');
+        const buttonContainer = document.querySelector('.button-container');
+        const dynamicRows = document.querySelector('.dynamic-rows');
+        const addButton = document.querySelector('.add-btn');
+        const deleteButton = document.querySelector('.delete-btn');
+
+        function loadSavedRows() {
+            const savedRows = JSON.parse(localStorage.getItem('dynamicRows')) || [];
+            dynamicRows.innerHTML = '';
+            savedRows.forEach(row => createRow(row));
+            if (savedRows.length) showButtons();
+        }
+
+        function saveRows() {
+            const rowValues = [...dynamicRows.querySelectorAll('input')].map(input => input.value);
+            localStorage.setItem('dynamicRows', JSON.stringify(rowValues));
+        }
+
+        function createRow(value = '') {
+            const rowDiv = document.createElement('div');
+            rowDiv.classList.add('dynamic-row');
+            const inputField = document.createElement('input');
+            inputField.value = value;
+            inputField.addEventListener('input', saveRows);
+            rowDiv.appendChild(inputField);
+            dynamicRows.appendChild(rowDiv);
+        }
+
+        function showButtons() {
+            buttonContainer.style.display = 'flex';
+            dynamicRows.style.display = 'block';
+            placeholderDiv.style.display = 'none';
+            hoverText.style.display = 'none';
+        }
+
+        function hideButtons() {
+            buttonContainer.style.display = 'none';
+            dynamicRows.style.display = 'none';
+            placeholderDiv.style.display = 'block';
+            hoverText.style.display = 'block';
+        }
+
+        addButton.addEventListener('click', () => {
+            createRow();
+            saveRows();
+            showButtons();
+        });
+
+        deleteButton.addEventListener('click', () => {
+            const lastRow = dynamicRows.lastElementChild;
+            if (lastRow) {
+                dynamicRows.removeChild(lastRow);
+                saveRows();
+            }
+            if (!dynamicRows.childElementCount) hideButtons();
+        });
+
+        loadSavedRows();
+    });
+
+    document.addEventListener('DOMContentLoaded', () => {
+        const widthInput = document.querySelector('.input-width');
+        const heightInput = document.querySelector('.input-height');
+        const calculateBtn = document.querySelector('.calculate-btn');
+        const areaResult = document.querySelector('.area-result');
+
+        calculateBtn.addEventListener('click', () => {
+            const width = parseFloat(widthInput.value);
+            const height = parseFloat(heightInput.value);
+            if (!width || !height || width <= 0 || height <= 0) {
+                areaResult.textContent = 'Enter valid dimensions!';
+                return;
+            }
+            areaResult.textContent = `Area: ${width * height}`;
+        });
+    });
+</script>
+
+</html>
